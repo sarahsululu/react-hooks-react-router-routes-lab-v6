@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom";
-import { RouterProvider, createMemoryRouter} from "react-router-dom"
+import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { render, screen } from "@testing-library/react";
-import routes from "../routes";
+import { routeObjects } from "../routes";
 
 const directors = [
   {
@@ -18,39 +18,33 @@ const directors = [
   },
 ];
 
-const router = createMemoryRouter(routes, {
-  initialEntries: [`/directors`],
-  initialIndex: 0
-})
+const createRouter = () =>
+  createMemoryRouter(routeObjects, {
+    initialEntries: ["/directors"],
+  });
 
 test("renders without any errors", () => {
   const errorSpy = vi.spyOn(global.console, "error");
-
-  render(<RouterProvider router={router}/>);
-
+  render(<RouterProvider router={createRouter()} />);
   expect(errorSpy).not.toHaveBeenCalled();
-
   errorSpy.mockRestore();
 });
 
-test("renders 'Directors Page' inside of a <h1 />", () => {
-  render(<RouterProvider router={router}/>);
-  const h1 = screen.queryByText(/Directors Page/);
-  expect(h1).toBeInTheDocument();
-  expect(h1.tagName).toBe("H1");
+test("renders 'Directors Page' inside of a <h1 />", async () => {
+  render(<RouterProvider router={createRouter()} />);
+  const heading = await screen.findByRole("heading", { level: 1 });
+  expect(heading).toHaveTextContent("Directors Page");
 });
 
 test("renders each director's name", async () => {
-  render(<RouterProvider router={router}/>);
+  render(<RouterProvider router={createRouter()} />);
   for (const director of directors) {
-    expect(
-      await screen.findByText(director.name, { exact: false })
-    ).toBeInTheDocument();
+    expect(await screen.findByText(director.name, { exact: false })).toBeInTheDocument();
   }
 });
 
 test("renders a <li /> for each movie", async () => {
-  render(<RouterProvider router={router}/>);
+  render(<RouterProvider router={createRouter()} />);
   for (const director of directors) {
     for (const movie of director.movies) {
       const li = await screen.findByText(movie, { exact: false });
@@ -61,11 +55,6 @@ test("renders a <li /> for each movie", async () => {
 });
 
 test("renders the <NavBar /> component", () => {
-  const router = createMemoryRouter(routes, {
-    initialEntries: ['/directors']
-  })
-  render(
-      <RouterProvider router={router}/>
-  );
+  render(<RouterProvider router={createRouter()} />);
   expect(document.querySelector(".navbar")).toBeInTheDocument();
 });

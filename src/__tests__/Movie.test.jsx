@@ -1,54 +1,47 @@
 import "@testing-library/jest-dom";
-import { RouterProvider, createMemoryRouter} from "react-router-dom"
 import { render, screen } from "@testing-library/react";
-import routes from "../routes";
+import { RouterProvider, createMemoryRouter } from "react-router-dom";
+import { routeObjects } from "../routes";
 
-const id = 1
-const router = createMemoryRouter(routes, {
+const createRouter = (id = 1) =>
+  createMemoryRouter(routeObjects, {
     initialEntries: [`/movie/${id}`],
-    initialIndex: 0
-})
+  });
 
 test("renders without any errors", () => {
   const errorSpy = vi.spyOn(global.console, "error");
-
-  render(<RouterProvider router={router}/>);
-
+  render(<RouterProvider router={createRouter()} />);
   expect(errorSpy).not.toHaveBeenCalled();
-
   errorSpy.mockRestore();
 });
 
 test("renders movie's title in an h1", async () => {
-  render(<RouterProvider router={router} />);
-  const h1 = await screen.findByText(/Doctor Strange/);
-  expect(h1).toBeInTheDocument();
-  expect(h1.tagName).toBe("H1");
+  render(<RouterProvider router={createRouter()} />);
+  const h1 = await screen.findByRole("heading", { level: 1 });
+  expect(h1).toHaveTextContent("Doctor Strange");
 });
 
 test("renders movie's time within a p tag", async () => {
-  render(<RouterProvider router={router} />);
+  render(<RouterProvider router={createRouter()} />);
   const p = await screen.findByText(/115/);
   expect(p).toBeInTheDocument();
   expect(p.tagName).toBe("P");
 });
 
-test("renders a span for each genre",  () => {
-  render(<RouterProvider router={router} />);
+test("renders a span for each genre", async () => {
+  render(<RouterProvider router={createRouter()} />);
   const genres = ["Action", "Adventure", "Fantasy"];
-  genres.forEach(async (genre) =>{
-    const span = await screen.findByText(genre);
-    expect(span).toBeInTheDocument();
-    expect(span.tagName).toBe("SPAN");
-  })
+  await Promise.all(
+    genres.map(async (genre) => {
+      const span = await screen.findByText(genre);
+      expect(span).toBeInTheDocument();
+      expect(span.tagName).toBe("SPAN");
+    })
+  );
 });
 
 test("renders the <NavBar /> component", async () => {
-  const router = createMemoryRouter(routes, {
-    initialEntries: [`/movie/1`]
-  })
-  render(
-      <RouterProvider router={router}/>
-  );
+  render(<RouterProvider router={createRouter()} />);
   expect(await screen.findByRole("navigation")).toBeInTheDocument();
 });
+
